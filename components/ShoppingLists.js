@@ -29,6 +29,9 @@ const ShoppingLists = ({ db }) => {
         if (newListRef.id) {
             setLists([newList, ...lists]);
           Alert.alert(`The list "${listName}" has been added.`);
+          setListName("");
+            setItem1("");
+            setItem2("");
         }
         else {
           Alert.alert("Unable to add. Please try later");
