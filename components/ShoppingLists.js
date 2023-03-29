@@ -1,6 +1,6 @@
 import { View, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Alert } from "react-native";
 import { useState, useEffect } from "react";
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, onSnapshot } from "firebase/firestore";
 
 
 const ShoppingLists = ({ db }) => {
@@ -10,26 +10,27 @@ const ShoppingLists = ({ db }) => {
     const [item1, setItem1] = useState("");
     const [item2, setItem2] = useState("");
 
-    const fetchShoppingLists = async () => {
-        const listsDocuments = await getDocs(collection(db, "shoppinglists"));
-        let newLists = [];
-        listsDocuments.forEach(docObject => {
-          newLists.push({ id: docObject.id, ...docObject.data() })
-        });
-        setLists(newLists)
-    }
-
     useEffect(() => {
-    fetchShoppingLists();
-    }, [`${lists}`]);
+        const unsubShoppinglists = onSnapshot(collection(db, "shoppinglists"), (documentsSnapshot) => {
+          let newLists = [];
+          documentsSnapshot.forEach(doc => {
+            newLists.push({ id: doc.id, ...doc.data() })
+          });
+          setLists(newLists);
+        });
+
+        return () => {
+            if (unsubShoppinglists) unsubShoppinglists();
+          }
+      }, []);
 
     const addShoppingList = async (newList) => {
         const newListRef = await addDoc(collection(db, "shoppinglists"), newList);
 
         if (newListRef.id) {
             setLists([newList, ...lists]);
-          Alert.alert(`The list "${listName}" has been added.`);
-          setListName("");
+            Alert.alert(`The list "${listName}" has been added.`);
+            setListName("");
             setItem1("");
             setItem2("");
         }
